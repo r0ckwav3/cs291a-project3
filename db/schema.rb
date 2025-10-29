@@ -10,7 +10,50 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2025_10_29_210307) do
+ActiveRecord::Schema[8.1].define(version: 2025_10_29_223834) do
+  create_table "conversations", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.bigint "initiator_id", null: false
+    t.datetime "last_message_at"
+    t.string "status", default: "waiting", null: false
+    t.string "title", null: false
+    t.datetime "updated_at", null: false
+    t.index ["initiator_id"], name: "fk_rails_bd11b77488"
+  end
+
+  create_table "expert_assignments", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+    t.datetime "assigned_at", null: false
+    t.bigint "conversation_id", null: false
+    t.datetime "created_at", null: false
+    t.datetime "resolved_at"
+    t.string "status", default: "active", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "user_id", null: false
+    t.index ["conversation_id"], name: "fk_rails_84fd845050"
+    t.index ["user_id"], name: "fk_rails_affb9075b9"
+  end
+
+  create_table "expert_profiles", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+    t.text "bio"
+    t.datetime "created_at", null: false
+    t.json "knowledge_base_links"
+    t.datetime "updated_at", null: false
+    t.bigint "user_id", null: false
+    t.index ["user_id"], name: "index_expert_profiles_on_user_id", unique: true
+  end
+
+  create_table "messages", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+    t.text "content", null: false
+    t.bigint "conversation_id", null: false
+    t.datetime "created_at", null: false
+    t.boolean "is_read", default: false, null: false
+    t.bigint "sender_id", null: false
+    t.string "sender_role", null: false
+    t.datetime "updated_at", null: false
+    t.index ["conversation_id"], name: "fk_rails_7f927086d2"
+    t.index ["sender_id"], name: "fk_rails_b8f26a382d"
+  end
+
   create_table "sessions", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.text "data"
@@ -28,4 +71,11 @@ ActiveRecord::Schema[8.1].define(version: 2025_10_29_210307) do
     t.string "username", null: false
     t.index ["username"], name: "index_users_on_username", unique: true
   end
+
+  add_foreign_key "conversations", "users", column: "initiator_id"
+  add_foreign_key "expert_assignments", "conversations"
+  add_foreign_key "expert_assignments", "users"
+  add_foreign_key "expert_profiles", "users"
+  add_foreign_key "messages", "conversations"
+  add_foreign_key "messages", "users", column: "sender_id"
 end
