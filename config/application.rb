@@ -16,6 +16,27 @@ module HelpDeskBackend
     # Common ones are `templates`, `generators`, or `middleware`, for example.
     config.autoload_lib(ignore: %w[assets tasks])
 
+    config.middleware.use ActionDispatch::Cookies
+    config.middleware.use ActionDispatch::Session::ActiveRecordStore, {
+      expire_after: 24.hours,
+      same_site: Rails.env.development? ? :lax : :none,
+      secure: Rails.env.production?
+    }
+
+    # Add this inside the Application class
+    config.middleware.insert_before 0, Rack::Cors do
+      allow do
+        origins [
+            'http://localhost:5173',
+            'http://127.0.0.1:5173',
+        ]
+        resource '*',
+          headers: :any,
+          methods: [:get, :post, :put, :patch, :delete, :options, :head],
+          credentials: true
+      end
+    end
+
     # Configuration for the application, engines, and railties goes here.
     #
     # These settings can be overridden in specific environments using the files
