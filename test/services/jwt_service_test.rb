@@ -1,6 +1,7 @@
 require "test_helper"
 
 class JwtServiceTest < ActiveSupport::TestCase
+  self.use_instantiated_fixtures = :no_instances
   def setup
     @user = User.create!(username: "testuser", password: "password123")
   end
