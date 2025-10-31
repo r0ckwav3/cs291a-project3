@@ -1,6 +1,11 @@
 Rails.application.routes.draw do
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
 
+  get "conversations/", to: "conversations#index"
+  get "conversations/:id", to: "conversations#show"
+  post "conversations/", to: "conversations#create"
+  get "conversations/:id/messages", to: "conversations#messages"
+
   post "auth/register"
   post "auth/login"
   post "auth/logout"

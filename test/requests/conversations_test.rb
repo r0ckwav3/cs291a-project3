@@ -4,6 +4,9 @@ class ConversationsTest < ActionDispatch::IntegrationTest
   def setup
     @user = User.create!(username: "testuser", password: "password123")
     @token = JwtService.encode(@user)
+    @expert = User.create!(username: "expertuser", password: "password123")
+    @expert_token = JwtService.encode(@expert)
+    ExpertProfile.create!(user: @expert, bio: "Expert developer", knowledge_base_links: [])
   end
 
   test "GET /conversations returns user's conversations" do
@@ -11,6 +14,20 @@ class ConversationsTest < ActionDispatch::IntegrationTest
     get "/conversations", headers: { "Authorization" => "Bearer #{@token}" }
     assert_response :ok
     assert_equal 1, JSON.parse(response.body).length
+  end
+
+  test "GET /conversations returns user's expert assigned conversations" do
+    conversation = Conversation.create!(title: "Test Conversation", initiator: @user, assigned_expert: @expert)
+    get "/conversations", headers: { "Authorization" => "Bearer #{@expert_token}" }
+    assert_response :ok
+    assert_equal 1, JSON.parse(response.body).length
+  end
+
+  test "GET /conversations does not return unassigned conversations" do
+    conversation = Conversation.create!(title: "Test Conversation", initiator: @user)
+    get "/conversations", headers: { "Authorization" => "Bearer #{@expert_token}" }
+    assert_response :ok
+    assert_equal 0, JSON.parse(response.body).length
   end
 
   test "POST /conversations creates a new conversation" do
@@ -64,13 +81,11 @@ class ConversationsTest < ActionDispatch::IntegrationTest
   end
 
   test "GET /conversations includes assignedExpertUsername when expert is assigned" do
-    expert_user = User.create!(username: "expertuser", password: "password123")
-    expert = ExpertProfile.create!(user: expert_user, bio: "Expert developer", knowledge_base_links: [])
-    conversation = Conversation.create!(title: "Test Conversation", initiator: @user, assigned_expert: expert.user, status: "active")
+    conversation = Conversation.create!(title: "Test Conversation", initiator: @user, assigned_expert: @expert, status: "active")
     get "/conversations", headers: { "Authorization" => "Bearer #{@token}" }
     assert_response :ok
     response_data = JSON.parse(response.body)
-    assert_equal expert.user.username, response_data.first["assignedExpertUsername"]
+    assert_equal @expert.username, response_data.first["assignedExpertUsername"]
   end
 
   test "GET /conversations includes null assignedExpertUsername when no expert assigned" do
