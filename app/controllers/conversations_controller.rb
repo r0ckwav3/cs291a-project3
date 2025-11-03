@@ -1,6 +1,7 @@
 class ConversationsController < ApplicationController
   include Authorized
   before_action :authorize
+  before_action :authorize_conversation, only: [:show, :messages]
 
   def index
     conv_ids = Conversation.where(initiator: @user).to_a
@@ -10,14 +11,7 @@ class ConversationsController < ApplicationController
   end
 
   def show
-    conv = Conversation.find(params[:id])
-    if !conv || (conv.initiator != @user and conv.assigned_expert != @user)
-      render json: {
-        "error": "Conversation not found"
-      }, status: :not_found
-      return
-    end
-    render json: format_conversation(conv), status: :ok
+    render json: format_conversation(@conv), status: :ok
   end
 
   def create
@@ -33,9 +27,34 @@ class ConversationsController < ApplicationController
   end
 
   def messages
+    msgs = @conv.messages.order(:created_at)
+    render json: msgs.map { |msg| format_message(msg) }, status: :ok
   end
 
   private
+
+  def authorize_conversation
+    @conv = Conversation.find(params[:id])
+    if !@conv || (@conv.initiator != @user and @conv.assigned_expert != @user)
+      render json: {
+        "error": "Conversation not found"
+      }, status: :not_found
+      return
+    end
+  end
+
+  def format_message(msg)
+    return {
+      "id": msg.id.to_s,
+      "conversationId": msg.conversation_id.to_s,
+      "senderId": msg.sender_id.to_s,
+      "senderUsername": msg.sender.username,
+      "senderRole": msg.sender_role,
+      "content": msg.content,
+      "timestamp": msg.created_at,
+      "isRead": msg.is_read
+    }
+  end
 
   def format_conversation(conv)
     return {
