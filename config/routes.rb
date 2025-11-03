@@ -6,6 +6,8 @@ Rails.application.routes.draw do
   get "conversations/:id", to: "conversations#show"
   post "conversations/", to: "conversations#create"
   get "conversations/:id/messages", to: "conversations#messages"
+  post "messages/", to:"conversations#post_message"
+  put "messages/:id/read", to:"conversations#mark_message_read"
 
   post "auth/register"
   post "auth/login"

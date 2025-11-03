@@ -1,7 +1,7 @@
 class ConversationsController < ApplicationController
   include Authorized
   before_action :authorize
-  before_action :authorize_conversation, only: [:show, :messages]
+  before_action :fetch_authorize_conversation, only: [:show, :messages]
 
   def index
     conv_ids = Conversation.where(initiator: @user).to_a
@@ -31,16 +31,54 @@ class ConversationsController < ApplicationController
     render json: msgs.map { |msg| format_message(msg) }, status: :ok
   end
 
+  def post_message
+    @conv = Conversation.find(params[:conversationId])
+    return unless authorize_conversation()
+    sender_role = @conv.initiator == @user ? "initiator" : "expert"
+    msg = @conv.messages.create!(sender: @user, sender_role: sender_role, content: params[:content])
+    render json: format_message(msg), status: :created
+  end
+
+  def mark_message_read
+    msg = Message.find(params[:id])
+    if !msg
+      render json: {
+        "error": "Message not found"
+      }, status: :not_found
+      return
+    end
+
+    @conv = msg.conversation
+    return unless authorize_conversation()
+
+    if msg.sender == @user
+      render json: {
+        "error": "Cannot mark your own messages as read"
+      }, status: :forbidden
+      return
+    end
+
+    msg.is_read = true
+    msg.save
+
+    render json: { "success": true }, status: :ok
+  end
+
   private
 
-  def authorize_conversation
+  def fetch_authorize_conversation
     @conv = Conversation.find(params[:id])
+    authorize_conversation()
+  end
+
+  def authorize_conversation
     if !@conv || (@conv.initiator != @user and @conv.assigned_expert != @user)
       render json: {
         "error": "Conversation not found"
       }, status: :not_found
-      return
+      return false
     end
+    return true
   end
 
   def format_message(msg)
