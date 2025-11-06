@@ -62,4 +62,28 @@ class ExpertTest < ActionDispatch::IntegrationTest
     post "/expert/conversations/#{conversation.id}/claim", headers: { "Authorization" => "Bearer #{@expert_token}" }
     assert_response :unprocessable_entity
   end
+
+
+  test "can unclaim a conversation" do
+    conversation = Conversation.create!(title: "Test Conversation", initiator: @user, assigned_expert: @expert, status: "active")
+    post "/expert/conversations/#{conversation.id}/unclaim", headers: { "Authorization" => "Bearer #{@expert_token}" }
+    assert_response :ok
+
+    conversation.reload
+
+    assert_nil conversation.assigned_expert
+    assert_equal "waiting", conversation.status
+    # make sure we actually deleted the row in the expert assignments table
+    assert_equal 0, ExpertAssignment.count
+  end
+
+  test "cannot unclaim an unclaimed conversation" do
+    conversation = Conversation.create!(title: "Test Conversation", initiator: @user, assigned_expert: @other_user, status: "active")
+    post "/expert/conversations/#{conversation.id}/unclaim", headers: { "Authorization" => "Bearer #{@expert_token}" }
+    assert_response :forbidden
+
+    conversation2 = Conversation.create!(title: "Test Conversation", initiator: @user, status: "waiting")
+    post "/expert/conversations/#{conversation2.id}/unclaim", headers: { "Authorization" => "Bearer #{@expert_token}" }
+    assert_response :forbidden
+  end
 end

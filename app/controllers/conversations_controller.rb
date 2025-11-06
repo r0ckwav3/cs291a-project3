@@ -40,7 +40,7 @@ class ConversationsController < ApplicationController
       return
     elsif @user != @conv.initiator && @user != @conv.assigned_expert
       render json: {
-        "error": "Cannot post messages to an unclaimed conversation"
+        "error": "You have not joined this conversation"
       }, status: :forbidden
       return
     end

@@ -31,6 +31,20 @@ class ExpertController < ApplicationController
   end
 
   def unclaim
+    if @conv.assigned_expert != @user
+      render json: {
+        "error": "You are not assigned to this conversation"
+      }, status: :forbidden
+      return
+    end
+
+    @conv.expert_assignment.destroy
+    @conv.status = "waiting"
+    @conv.save
+
+    render json: {
+      "success": true
+    }, status: :ok
   end
 
   def show_profile
