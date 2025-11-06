@@ -48,9 +48,22 @@ class ExpertController < ApplicationController
   end
 
   def show_profile
+    render json: format_profile(@user.expert_profile)
   end
 
   def edit_profile
+    ep = @user.expert_profile
+
+    if params[:bio]
+      ep.bio = params[:bio]
+    end
+    if params[:knowledgeBaseLinks]
+      ep.knowledge_base_links = params[:knowledgeBaseLinks]
+    end
+
+    ep.save
+
+    render json: format_profile(ep)
   end
 
   def assignment_history
@@ -84,6 +97,17 @@ class ExpertController < ApplicationController
       "updatedAt": conv.updated_at,
       "lastMessageAt": conv.last_message_at,
       "unreadCount": conv.unread_count(@user)
+    }
+  end
+
+  def format_profile(ep)
+    return {
+      "id": ep.id.to_s,
+      "userId": ep.user_id.to_s,
+      "bio": ep.bio,
+      "knowledgeBaseLinks": ep.knowledge_base_links,
+      "createdAt": ep.created_at,
+      "updatedAt": ep.updated_at
     }
   end
 end

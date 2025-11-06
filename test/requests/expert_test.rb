@@ -8,7 +8,7 @@ class ExpertTest < ActionDispatch::IntegrationTest
     @other_token = JwtService.encode(@other_user)
     @expert = User.create!(username: "expertuser", password: "password123")
     @expert_token = JwtService.encode(@expert)
-    ExpertProfile.create!(user: @expert, bio: "Expert developer", knowledge_base_links: [])
+    ExpertProfile.create!(user: @expert, bio: "Expert developer", knowledge_base_links: ["lists","examples","reflexivity"])
   end
 
   test "GET /queue returns assigned conversations" do
@@ -85,5 +85,38 @@ class ExpertTest < ActionDispatch::IntegrationTest
     conversation2 = Conversation.create!(title: "Test Conversation", initiator: @user, status: "waiting")
     post "/expert/conversations/#{conversation2.id}/unclaim", headers: { "Authorization" => "Bearer #{@expert_token}" }
     assert_response :forbidden
+  end
+
+  test "can get profile" do
+    get "/expert/profile", headers: { "Authorization" => "Bearer #{@expert_token}" }
+    assert_response :ok
+    response_data = JSON.parse(response.body)
+
+    ep = @expert.expert_profile
+    assert_equal ep.id.to_s, response_data["id"]
+    assert_equal @expert.id.to_s, response_data["userId"]
+    assert_equal ep.bio, response_data["bio"]
+    assert_equal ep.knowledge_base_links, response_data["knowledgeBaseLinks"]
+  end
+
+  test "can update profile" do
+    put "/expert/profile",
+         params: {
+           "bio": "Expert at testing",
+           "knowledgeBaseLinks": ["unit tests", "integration tests"]
+         }, headers: {
+           "Authorization" => "Bearer #{@expert_token}"
+         }
+    assert_response :ok
+    response_data = JSON.parse(response.body)
+
+    ep = @expert.expert_profile
+    @expert.reload
+    ep.reload
+
+    assert_equal ep.id.to_s, response_data["id"]
+    assert_equal @expert.id.to_s, response_data["userId"]
+    assert_equal ep.bio, response_data["bio"]
+    assert_equal ep.knowledge_base_links, response_data["knowledgeBaseLinks"]
   end
 end
