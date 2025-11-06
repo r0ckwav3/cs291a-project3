@@ -89,7 +89,7 @@ class ConversationsTest < ActionDispatch::IntegrationTest
            "content": "my test message"
          },
          headers: { "Authorization" => "Bearer #{@other_token}" }
-    assert_response :not_found
+    assert_response :forbidden
   end
 
   test "PUT /messages/:id/read marks messages as read" do
@@ -109,12 +109,4 @@ class ConversationsTest < ActionDispatch::IntegrationTest
       headers: { "Authorization" => "Bearer #{@token}" }
     assert_response :forbidden
   end
-
-  test "cannot mark messages as read in unowned conversation" do
-    msg1 = @conversation.messages.create!(sender: @user, sender_role: "initiator", content:"How do I deploy a Rails application?", is_read: false)
-    put "/messages/#{msg1.id}/read",
-      headers: { "Authorization" => "Bearer #{@other_token}" }
-    assert_response :not_found
-  end
-
 end

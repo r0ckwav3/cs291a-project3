@@ -45,4 +45,21 @@ class ExpertTest < ActionDispatch::IntegrationTest
     assert_equal 0, response_data["assignedConversations"].length
     assert_equal 0, response_data["waitingConversations"].length
   end
+
+  test "can claim an unclaimed conversation" do
+    conversation = Conversation.create!(title: "Test Conversation", initiator: @user, status: "waiting")
+    post "/expert/conversations/#{conversation.id}/claim", headers: { "Authorization" => "Bearer #{@expert_token}" }
+    assert_response :ok
+
+    conversation.reload
+
+    assert_equal @expert, conversation.assigned_expert
+    assert_equal "active", conversation.status
+  end
+
+  test "cannot claim a claimed conversation" do
+    conversation = Conversation.create!(title: "Test Conversation", initiator: @user, assigned_expert: @other_user, status: "active")
+    post "/expert/conversations/#{conversation.id}/claim", headers: { "Authorization" => "Bearer #{@expert_token}" }
+    assert_response :unprocessable_entity
+  end
 end

@@ -1,7 +1,7 @@
 class ConversationsController < ApplicationController
   include Authorized
   before_action :authorize
-  before_action :fetch_authorize_conversation, only: [:show, :messages]
+  before_action :fetch_conversation, only: [:show, :messages]
 
   def index
     conv_ids = Conversation.where(initiator: @user).to_a
@@ -33,7 +33,17 @@ class ConversationsController < ApplicationController
 
   def post_message
     @conv = Conversation.find(params[:conversationId])
-    return unless authorize_conversation()
+    if !@conv
+      render json: {
+        "error": "Conversation not found"
+      }, status: :not_found
+      return
+    elsif @user != @conv.initiator && @user != @conv.assigned_expert
+      render json: {
+        "error": "Cannot post messages to an unclaimed conversation"
+      }, status: :forbidden
+      return
+    end
     sender_role = @conv.initiator == @user ? "initiator" : "expert"
     msg = @conv.messages.create!(sender: @user, sender_role: sender_role, content: params[:content])
     render json: format_message(msg), status: :created
@@ -49,7 +59,12 @@ class ConversationsController < ApplicationController
     end
 
     @conv = msg.conversation
-    return unless authorize_conversation()
+    if !@conv
+      render json: {
+        "error": "Conversation not found"
+      }, status: :not_found
+      return
+    end
 
     if msg.sender == @user
       render json: {
@@ -66,19 +81,14 @@ class ConversationsController < ApplicationController
 
   private
 
-  def fetch_authorize_conversation
+  def fetch_conversation
     @conv = Conversation.find(params[:id])
-    authorize_conversation()
-  end
-
-  def authorize_conversation
-    if !@conv || (@conv.initiator != @user and @conv.assigned_expert != @user)
+    if !@conv
       render json: {
         "error": "Conversation not found"
       }, status: :not_found
       return false
     end
-    return true
   end
 
   def format_message(msg)

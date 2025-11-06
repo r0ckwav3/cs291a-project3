@@ -1,9 +1,9 @@
 class ExpertController < ApplicationController
   include Authorized
   before_action :authorize
+  before_action :fetch_conversation, only: [:claim, :unclaim]
 
   def queue
-
     waiting = Conversation.left_joins(:expert_assignment).where(expert_assignments: { user: nil })
     assigned = Conversation.left_joins(:expert_assignment).where(expert_assignments: { user: @user.id })
 
@@ -14,6 +14,20 @@ class ExpertController < ApplicationController
   end
 
   def claim
+    if @conv.assigned_expert
+      render json: {
+        "error": "Conversation is already assigned to an expert"
+      }, status: :unprocessable_entity
+      return
+    end
+
+    @conv.assigned_expert = @user
+    @conv.status = "active"
+    @conv.save
+
+    render json: {
+      "success": true
+    }, status: :ok
   end
 
   def unclaim
@@ -30,7 +44,19 @@ class ExpertController < ApplicationController
 
   private
 
-  # identical to the one in conversations_controller.rb
+
+  # copied from conversations_controller.rb
+  def fetch_conversation
+    @conv = Conversation.find(params[:id])
+    if !@conv
+      render json: {
+        "error": "Conversation not found"
+      }, status: :not_found
+      return false
+    end
+  end
+
+  # copied conversations_controller.rb
   def format_conversation(conv)
     return {
       "id": conv.id.to_s,
