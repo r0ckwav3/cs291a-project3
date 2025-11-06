@@ -20,7 +20,7 @@ Rails.application.routes.draw do
   post "expert/conversations/:id/unclaim", to: "expert#unclaim"
   get "expert/profile", to: "expert#show_profile"
   put "expert/profile", to: "expert#edit_profile"
-  get "expert/assignments/history", to: "exper#assignment_history"
+  get "expert/assignments/history", to: "expert#assignment_history"
 
   # Reveal health status on /up that returns 200 if the app boots with no exceptions, otherwise 500.
   # Can be used by load balancers and uptime monitors to verify that the app is live.

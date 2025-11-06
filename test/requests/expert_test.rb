@@ -55,6 +55,7 @@ class ExpertTest < ActionDispatch::IntegrationTest
 
     assert_equal @expert, conversation.assigned_expert
     assert_equal "active", conversation.status
+    assert_not_nil conversation.expert_assignment.assigned_at
   end
 
   test "cannot claim a claimed conversation" do
@@ -110,13 +111,28 @@ class ExpertTest < ActionDispatch::IntegrationTest
     assert_response :ok
     response_data = JSON.parse(response.body)
 
-    ep = @expert.expert_profile
     @expert.reload
-    ep.reload
+    @expert.expert_profile.reload
 
-    assert_equal ep.id.to_s, response_data["id"]
-    assert_equal @expert.id.to_s, response_data["userId"]
-    assert_equal ep.bio, response_data["bio"]
-    assert_equal ep.knowledge_base_links, response_data["knowledgeBaseLinks"]
+    assert_equal "Expert at testing", @expert.expert_profile.bio
+    assert_equal "Expert at testing", response_data["bio"]
+    assert_equal ["unit tests", "integration tests"], response_data["knowledgeBaseLinks"]
+  end
+
+  test "can get expert assignments" do
+    conversation = Conversation.create!(title: "Test Conversation", initiator: @user, assigned_expert: @expert, status: "active")
+    get "/expert/assignments/history", headers: { "Authorization" => "Bearer #{@expert_token}" }
+    assert_response :ok
+
+    response_data = JSON.parse(response.body)
+
+    assert_equal 1, response_data.length
+    assert_equal conversation.expert_assignment.id.to_s, response_data[0]["id"]
+    assert_equal conversation.expert_assignment.user_id.to_s, response_data[0]["expertId"]
+    assert_equal conversation.id.to_s, response_data[0]["conversationId"]
+    assert_equal conversation.expert_assignment.status, response_data[0]["status"]
+    assert_not_nil response_data[0]["assignedAt"]
+    assert_nil response_data[0]["resolvedAt"]
+    assert_equal conversation.expert_assignment.rating, response_data[0]["rating"]
   end
 end

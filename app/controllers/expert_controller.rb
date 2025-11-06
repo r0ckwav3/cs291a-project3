@@ -67,6 +67,7 @@ class ExpertController < ApplicationController
   end
 
   def assignment_history
+    render json: @user.expert_assignments.map{|ea| format_assignment(ea)}
   end
 
   private
@@ -108,6 +109,18 @@ class ExpertController < ApplicationController
       "knowledgeBaseLinks": ep.knowledge_base_links,
       "createdAt": ep.created_at,
       "updatedAt": ep.updated_at
+    }
+  end
+
+  def format_assignment(ea)
+    return {
+      "id": ea.id.to_s,
+      "conversationId": ea.conversation_id.to_s,
+      "expertId": ea.user_id.to_s,
+      "status": ea.conversation.status,
+      "assignedAt": ea.assigned_at,
+      "resolvedAt": ea.resolved_at,
+      "rating": ea.rating
     }
   end
 end
