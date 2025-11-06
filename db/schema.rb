@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2025_11_06_030843) do
+ActiveRecord::Schema[8.1].define(version: 2025_11_06_032514) do
   create_table "conversations", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.bigint "initiator_id", null: false
@@ -25,7 +25,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_11_06_030843) do
     t.datetime "assigned_at", null: false
     t.bigint "conversation_id", null: false
     t.datetime "created_at", null: false
-    t.integer "rating"
+    t.integer "rating", default: 0
     t.datetime "resolved_at"
     t.string "status", default: "active", null: false
     t.datetime "updated_at", null: false
