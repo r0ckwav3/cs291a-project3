@@ -8,8 +8,8 @@ class ExpertController < ApplicationController
     assigned = Conversation.left_joins(:expert_assignment).where(expert_assignments: { user: @user.id })
 
     render json: {
-      "waitingConversations": waiting.map {|c| format_conversation c},
-      "assignedConversations": assigned.map {|c| format_conversation c}
+      "waitingConversations": waiting.map {|c| FormatterService.format_conversation(c, @user)},
+      "assignedConversations": assigned.map {|c| FormatterService.format_conversation(c, @user)}
     }
   end
 
@@ -48,7 +48,7 @@ class ExpertController < ApplicationController
   end
 
   def show_profile
-    render json: format_profile(@user.expert_profile)
+    render json: FormatterService.format_profile(@user.expert_profile)
   end
 
   def edit_profile
@@ -63,15 +63,14 @@ class ExpertController < ApplicationController
 
     ep.save
 
-    render json: format_profile(ep)
+    render json: FormatterService.format_profile(ep)
   end
 
   def assignment_history
-    render json: @user.expert_assignments.map{|ea| format_assignment(ea)}
+    render json: @user.expert_assignments.map{|ea| FormatterService.format_assignment(ea)}
   end
 
   private
-
 
   # copied from conversations_controller.rb
   def fetch_conversation
@@ -82,45 +81,5 @@ class ExpertController < ApplicationController
       }, status: :not_found
       return false
     end
-  end
-
-  # copied conversations_controller.rb
-  def format_conversation(conv)
-    return {
-      "id": conv.id.to_s,
-      "title": conv.title,
-      "status": conv.status,
-      "questionerId": conv.initiator.id.to_s,
-      "questionerUsername": conv.initiator.username,
-      "assignedExpertId": conv.assigned_expert&.id&.to_s,
-      "assignedExpertUsername": conv.assigned_expert&.username,
-      "createdAt": conv.created_at,
-      "updatedAt": conv.updated_at,
-      "lastMessageAt": conv.last_message_at,
-      "unreadCount": conv.unread_count(@user)
-    }
-  end
-
-  def format_profile(ep)
-    return {
-      "id": ep.id.to_s,
-      "userId": ep.user_id.to_s,
-      "bio": ep.bio,
-      "knowledgeBaseLinks": ep.knowledge_base_links,
-      "createdAt": ep.created_at,
-      "updatedAt": ep.updated_at
-    }
-  end
-
-  def format_assignment(ea)
-    return {
-      "id": ea.id.to_s,
-      "conversationId": ea.conversation_id.to_s,
-      "expertId": ea.user_id.to_s,
-      "status": ea.conversation.status,
-      "assignedAt": ea.assigned_at,
-      "resolvedAt": ea.resolved_at,
-      "rating": ea.rating
-    }
   end
 end

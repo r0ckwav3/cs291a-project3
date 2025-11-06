@@ -7,11 +7,11 @@ class ConversationsController < ApplicationController
     conv_ids = Conversation.where(initiator: @user).to_a
     conv_ids += Conversation.joins(:expert_assignment).where(expert_assignments: { user: @user }).to_a
     conv_ids = conv_ids.flatten.uniq
-    render json: conv_ids.map {|c| format_conversation c}
+    render json: conv_ids.map {|c| FormatterService.format_conversation(c, @user)}
   end
 
   def show
-    render json: format_conversation(@conv), status: :ok
+    render json: FormatterService.format_conversation(@conv, @user), status: :ok
   end
 
   def create
@@ -23,12 +23,12 @@ class ConversationsController < ApplicationController
     end
 
     conv = Conversation.create!(title: params[:title], initiator: @user)
-    render json: format_conversation(conv), status: :created
+    render json: FormatterService.format_conversation(conv, @user), status: :created
   end
 
   def messages
     msgs = @conv.messages.order(:created_at)
-    render json: msgs.map { |msg| format_message(msg) }, status: :ok
+    render json: msgs.map { |msg| FormatterService.format_message(msg) }, status: :ok
   end
 
   def post_message
@@ -46,7 +46,7 @@ class ConversationsController < ApplicationController
     end
     sender_role = @conv.initiator == @user ? "initiator" : "expert"
     msg = @conv.messages.create!(sender: @user, sender_role: sender_role, content: params[:content])
-    render json: format_message(msg), status: :created
+    render json: FormatterService.format_message(msg), status: :created
   end
 
   def mark_message_read
@@ -90,34 +90,4 @@ class ConversationsController < ApplicationController
       return false
     end
   end
-
-  def format_message(msg)
-    return {
-      "id": msg.id.to_s,
-      "conversationId": msg.conversation_id.to_s,
-      "senderId": msg.sender_id.to_s,
-      "senderUsername": msg.sender.username,
-      "senderRole": msg.sender_role,
-      "content": msg.content,
-      "timestamp": msg.created_at,
-      "isRead": msg.is_read
-    }
-  end
-
-  def format_conversation(conv)
-    return {
-      "id": conv.id.to_s,
-      "title": conv.title,
-      "status": conv.status,
-      "questionerId": conv.initiator.id.to_s,
-      "questionerUsername": conv.initiator.username,
-      "assignedExpertId": conv.assigned_expert&.id&.to_s,
-      "assignedExpertUsername": conv.assigned_expert&.username,
-      "createdAt": conv.created_at,
-      "updatedAt": conv.updated_at,
-      "lastMessageAt": conv.last_message_at,
-      "unreadCount": conv.unread_count(@user)
-    }
-  end
-
 end

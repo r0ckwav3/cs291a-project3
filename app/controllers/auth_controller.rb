@@ -17,16 +17,7 @@ class AuthController < ApplicationController
     @jwt_token = JwtService.encode(@user)
     session[:user_id] = @user.id
 
-    # can't use function becuase we need :created status
-    render json: {
-      "user": {
-        "id": @user.id,
-        "username": @user.username,
-        "created_at": @user.created_at,
-        "last_active_at": @user.last_active_at
-      },
-      "token": @jwt_token
-    }, status: :created
+    render json: FormatterService.format_user_token(@user, @jwt_token), status: :created
   end
 
   def login
@@ -39,7 +30,7 @@ class AuthController < ApplicationController
 
     @jwt_token = JwtService.encode(@user)
     session[:user_id] = @user.id
-    render_user_info_with_token()
+    render json: FormatterService.format_user_token(@user, @jwt_token), status: :ok
   end
 
   def logout
@@ -61,33 +52,10 @@ class AuthController < ApplicationController
     end
 
     @jwt_token = JwtService.encode(@user)
-    render_user_info_with_token()
+    render json: FormatterService.format_user_token(@user, @jwt_token), status: :ok
   end
 
   def me
-    render_user_info()
-  end
-
-  private
-
-  def render_user_info
-    render json: {
-      "id": @user.id,
-      "username": @user.username,
-      "created_at": @user.created_at,
-      "last_active_at": @user.last_active_at
-    }, status: :ok
-  end
-
-  def render_user_info_with_token
-    render json: {
-      "user": {
-        "id": @user.id,
-        "username": @user.username,
-        "created_at": @user.created_at,
-        "last_active_at": @user.last_active_at
-      },
-      "token": @jwt_token
-    }, status: :ok
+    render json: FormatterService.format_user(@user), status: :ok
   end
 end
