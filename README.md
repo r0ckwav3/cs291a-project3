@@ -7,9 +7,8 @@
 - also changed database accesses to use root since it's the easiest way to set up multiple dbs (for test and dev)
 - has_secure_password and bcrypt
 - I'm changing the db structure a bit so that expert_assignments expert_id is a foreign key into the users table (instead of expert_profiles).
-- expert_id -> user_id in expert_assignment
-## TODOS
-- User, get `jwt_service_test.rb` passing
+- expert_id -> user_id in expert_assignments table
+- relatedly, in the "GET /api/expert-queue/updates" endpoint, expertId is an index into the Users table
 
 ## Text version of table specs
 ```

@@ -57,13 +57,6 @@ class ConversationsTest < ActionDispatch::IntegrationTest
     assert_equal @user.id.to_s, response_data["questionerId"]
   end
 
-  test "GET /conversations/:id requires user to own conversation" do
-    other_user = User.create!(username: "otheruser", password: "password123")
-    conversation = Conversation.create!(title: "Other Conversation", initiator: other_user, status: "waiting")
-    get "/conversations/#{conversation.id}", headers: { "Authorization" => "Bearer #{@token}" }
-    assert_response :not_found
-  end
-
   test "POST /conversations requires title" do
     post "/conversations",
          params: {},

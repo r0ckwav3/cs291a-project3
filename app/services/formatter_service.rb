@@ -16,7 +16,7 @@ class FormatterService
         "created_at": user.created_at,
         "last_active_at": user.last_active_at
       },
-      "token": jwt_token
+      "token": token
     }
   end
 

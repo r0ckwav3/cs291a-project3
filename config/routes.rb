@@ -22,6 +22,10 @@ Rails.application.routes.draw do
   put "expert/profile", to: "expert#edit_profile"
   get "expert/assignments/history", to: "expert#assignment_history"
 
+  get "api/conversations/updates", to: "updates#conversations"
+  get "api/messages/updates", to: "updates#messages"
+  get "api/expert-queue/updates", to: "updates#queue"
+
   # Reveal health status on /up that returns 200 if the app boots with no exceptions, otherwise 500.
   # Can be used by load balancers and uptime monitors to verify that the app is live.
   # get "health" => "rails/health#show", as: :rails_health_check
