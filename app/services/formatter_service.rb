@@ -53,8 +53,8 @@ class FormatterService
     return {
       "id": ep.id.to_s,
       "userId": ep.user_id.to_s,
-      "bio": ep.bio,
-      "knowledgeBaseLinks": ep.knowledge_base_links,
+      "bio": ep.bio || "",
+      "knowledgeBaseLinks": ep.knowledge_base_links || [],
       "createdAt": ep.created_at,
       "updatedAt": ep.updated_at
     }
